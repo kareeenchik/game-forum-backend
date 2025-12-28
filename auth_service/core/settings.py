@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 
+from datetime import timedelta
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -131,4 +134,12 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# Вставь это в самый конец settings.py
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': 'django-insecure-+7rjbuc2jicir_^(4om5g*!recwm%mmgb7ns*3x)0-ue_)2^gd', 
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }

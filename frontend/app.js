@@ -58,6 +58,9 @@ async function handleLogin() {
         });
         if (res.ok) {
             const data = await res.json();
+            
+            if (data.access) localStorage.setItem('token', data.access); 
+            
             localStorage.setItem('author_id', data.user_id || data.id); 
             localStorage.setItem('user_name', username);
             localStorage.setItem('user_role', data.role || 'user'); 
@@ -73,6 +76,15 @@ function handleLogout() {
     if(notificationInterval) clearInterval(notificationInterval);
     localStorage.clear(); 
     window.location.reload(); 
+}
+
+function getAuthHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'X-User-Id': localStorage.getItem('author_id'),
+        'X-User-Role': localStorage.getItem('user_role')
+    };
 }
 
 async function loadCategories() {
@@ -138,7 +150,7 @@ async function handleCreateTopic() {
     try {
         const res = await fetch(`${API_FORUM}/topics/`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: getAuthHeaders(), 
             body: JSON.stringify({
                 title, content, category: categoryId,
                 author_id: parseInt(localStorage.getItem('author_id')),
@@ -150,7 +162,7 @@ async function handleCreateTopic() {
             document.getElementById('topic-content').value = '';
             loadTopics();
             log("✅ Тема создана!");
-        }
+        } else if (res.status === 401) { alert("Ошибка: Вы не авторизованы (истек токен)"); }
     } catch (e) { log("❌ Ошибка создания"); }
 }
 
@@ -159,15 +171,11 @@ async function handleDeleteTopic(topicId) {
     try {
         const res = await fetch(`${API_FORUM}/topics/${topicId}/`, {
             method: 'DELETE',
-            headers: {
-                'X-User-Id': localStorage.getItem('author_id'),
-                'X-User-Role': localStorage.getItem('user_role')
-            }
+            headers: getAuthHeaders()
         });
         if (res.ok) { loadTopics(); log("🗑️ Тема удалена"); }
     } catch (e) { log("❌ Ошибка удаления"); }
 }
-
 
 async function openTopic(id, title, authorId, content, authorName) {
     currentTopicId = id;
@@ -230,11 +238,7 @@ async function handleSendComment() {
     try {
         const res = await fetch(`${API_FORUM}/posts/`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-User-Id': localStorage.getItem('author_id'),
-                'X-User-Role': localStorage.getItem('user_role')
-            },
+            headers: getAuthHeaders(), 
             body: JSON.stringify({
                 topic: parseInt(currentTopicId),
                 content: text,
@@ -245,7 +249,7 @@ async function handleSendComment() {
         if (res.ok) {
             document.getElementById('comment-text').value = '';
             refreshComments(true);
-        }
+        } else if (res.status === 401) { alert("Необходимо войти в систему!"); }
     } catch (e) { console.error(e); }
 }
 
@@ -254,10 +258,7 @@ async function handleDeletePost(postId) {
     try {
         const res = await fetch(`${API_FORUM}/posts/${postId}/`, {
             method: 'DELETE',
-            headers: {
-                'X-User-Id': localStorage.getItem('author_id'),
-                'X-User-Role': localStorage.getItem('user_role')
-            }
+            headers: getAuthHeaders() 
         });
         if (res.ok) refreshComments(true);
     } catch (e) { }
@@ -292,11 +293,7 @@ async function handleCreateCategory() {
     try {
         const res = await fetch(`${API_FORUM}/categories/`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-User-Id': localStorage.getItem('author_id'),
-                'X-User-Role': localStorage.getItem('user_role') 
-            },
+            headers: getAuthHeaders(), 
             body: JSON.stringify({ name: name })
         });
         if (res.ok) {

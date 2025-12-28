@@ -3,24 +3,24 @@ import json
 from django.db import models
 
 def send_to_rabbit(event_type, data):
-
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        # ЗАМЕНА: 'rabbitmq' вместо 'localhost' для работы в Docker
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
         channel = connection.channel()
         channel.queue_declare(queue='forum_events')
-        
+
         message = {
             'event': event_type,
             'data': data
         }
-        
+
         channel.basic_publish(
             exchange='',
             routing_key='forum_events',
             body=json.dumps(message)
         )
         connection.close()
-        print(f" [v] Событие '{event_type}' отправлено в очередь")
+        print(f" [v] Событие '{event_type}' отправлено")
     except Exception as e:
         print(f" [!] Ошибка RabbitMQ: {e}")
 
