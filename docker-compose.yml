@@ -20,6 +20,8 @@ services:
       - ./forum_service:/app
     environment:
       - PYTHONUNBUFFERED=1
+    depends_on:
+      - statistics_service
 
   statistics_service:
     build: ./statistics_service
@@ -30,3 +32,8 @@ services:
       - ./statistics_service:/app
     environment:
       - PYTHONUNBUFFERED=1
+    # Добавляем алиас stats для обхода ошибки RFC (подчеркивания)
+    networks:
+      default:
+        aliases:
+          - stats

@@ -32,7 +32,7 @@ def login_view(request):
             "access": str(refresh.access_token),
             "user_id": user.id,
             "username": user.username,
-            "role": user.role, # Используем поле из твоей модели [cite: 9]
-            "nickname": user.nickname # [cite: 10]
+            "role": user.role, 
+            "nickname": user.nickname 
         })
     return Response({"error": "Invalid credentials"}, status=400)

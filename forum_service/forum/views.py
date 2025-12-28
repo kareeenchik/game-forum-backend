@@ -5,15 +5,19 @@ from .models import Topic, Post, Category
 from .serializers import TopicSerializer, PostSerializer, CategorySerializer
 
 def send_to_audit(action, details, user_id):
+    # Если user_id не пришел, ставим 0 или "Unknown", чтобы база не ругалась на пустой ID
+    uid = user_id if user_id else 0
     try:
-        url = "http://statistics_service:8000/api/v1/logs/create/"
-        requests.post(url, json={
+        # Используем алиас 'stats' без подчеркиваний
+        url = "http://stats:8000/api/v1/logs/create/"
+        payload = {
             "action": action,
             "details": details,
-            "user_id": user_id
-        }, timeout=1)
+            "user_id": uid
+        }
+        requests.post(url, json=payload, timeout=1)
     except Exception as e:
-        print(f"Ошибка: Статистика недоступна ({e})")
+        print(f"Ошибка логирования: {e}")
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -41,8 +45,8 @@ class TopicViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        instance = serializer.save()
         user_id = self.request.headers.get('X-User-Id')
+        instance = serializer.save()
         send_to_audit("CREATE_TOPIC", f"Создана тема: {instance.title}", user_id)
 
     def destroy(self, request, *args, **kwargs):
@@ -68,10 +72,9 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
+        user_id = self.request.headers.get('X-User-Id')
         author_name = self.request.data.get('author_name', 'Аноним')
         instance = serializer.save(author_name=author_name)
-        
-        user_id = self.request.headers.get('X-User-Id')
         send_to_audit("CREATE_POST", f"Автор {author_name} оставил пост в теме ID: {instance.topic_id}", user_id)
 
     def destroy(self, request, *args, **kwargs):
