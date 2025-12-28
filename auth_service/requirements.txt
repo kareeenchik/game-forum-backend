@@ -1,0 +1,5 @@
+django>=5.1.4,<5.2
+djangorestframework>=3.15.2
+django-cors-headers>=4.6.0
+djangorestframework-simplejwt
+drf-spectacular>=0.28.0

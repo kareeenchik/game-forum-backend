@@ -1,0 +1,7 @@
+django>=5.1.4,<5.2
+djangorestframework
+django-cors-headers
+requests
+pika
+djangorestframework-simplejwt
+drf-spectacular
